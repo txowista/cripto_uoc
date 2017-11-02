@@ -31,13 +31,18 @@ BIT1 = BitType(1)
 # * Returns: vector of BitType
 def UOC_LFSR_Sequence(polynomial, initial_state, output_bits):
     result = None
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    result=[]
+    for i in range(0,output_bits):
+        result.append(int(initial_state[0]))
+        xtemp = 0
+        for x in range(len(polynomial)):
+            if polynomial[x] == GFBitType(1):
+                xtemp ^= int(initial_state[x])
+        for j in range(1, len(initial_state)):
+            initial_state[j-1] = initial_state[j]
+        initial_state[len(initial_state)-1] = GFBitType(xtemp)
     ##################################
-
     return result
 
 
