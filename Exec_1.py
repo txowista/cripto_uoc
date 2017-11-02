@@ -55,11 +55,14 @@ def UOC_Myfare_fA(input):
     result = None
 
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    sub_1 = input[0] | input[1]
+    sub_2 = input[0] & input[3]
+    sub_1 ^= sub_2
+    sub_2 = input[0] ^ input[1]
+    sub_2 |= input[3]
+    sub_2 &= input[2]
+    result = sub_1 ^ sub_2
     ##################################
-
     return result
 
 
@@ -70,11 +73,13 @@ def UOC_Myfare_fB(input):
     result = None
 
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    sub_1 = input[0] & input[1]
+    sub_1 |= input[2]
+    sub_2 = input[0] ^ input[1]
+    sub_3 = input[2] | input[3]
+    sub_2 &= sub_3
+    result = sub_1 ^ sub_2
     ##################################
-
     return result
 
 
@@ -85,9 +90,17 @@ def UOC_Myfare_fC(input):
     result = None
 
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    sub_1 = input[1] | input[4]
+    sub_2 = input[3] ^ input[4]
+    sub_1 &= sub_2
+    sub_1 |= input[0]
+    sub_2 = input[1] & input[3]
+    sub_2 ^= input[0]
+    sub_3 = input[1] & input[4]
+    sub_4 = input[2] ^ input[3]
+    sub_3 |= sub_4
+    sub_2 &= sub_3
+    result = sub_1 ^ sub_2
     ##################################
 
     return result
