@@ -198,14 +198,21 @@ def UOC_Myfare_Cipher(key, mode, message):
 # * Returns: list of lists of ints (space positions for each ciphertext)
 def UOC_find_spaces_ciphertexts(ciphertexts):
     spaces = []
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
-    ##################################
-
+    spaces_temp = []
+    for i in range(0,len(ciphertexts)-1):
+        for j in range(i+1, len(ciphertexts)):
+            my_spaces = []
+            for k in range(0, min(len(ciphertexts[i]),len(ciphertexts[j])), 2):
+                temp = int(ciphertexts[i][k:k + 2], 16) ^ int(ciphertexts[j][k:k + 2], 16)
+                if 0x61 <= temp <= 0x7A or temp == 0:
+                    my_spaces.append(k)
+            spaces_temp.append(my_spaces)
+    for i in range(0, len(spaces_temp) - 1):
+        for j in range(i + 1, len(spaces_temp)):
+            spaces.append(sorted(list(set(spaces_temp[i]).intersection(spaces_temp[j]))))
+    print spaces
+    #################################
     return spaces
 
 
@@ -506,6 +513,11 @@ test_case_6("6.2", ciphertexts, exp_spaces)
 
 ciphertexts = ['1310728D5014D3CD03F1484ABB417B7CC1036DCA54B18C07F85AEE8A2FFC3B531B3A6DE0CBE9F3CDE7EF79C509A8E772F234EBDA2358936A86989C', '101D17FE4010CBCC6FEA5743BF560F13C06519C159D48F059150ECED29EE5A5E1B2069E4C0F2E7CBEB807FA413C68163E528FFAE254BE16D849F88', '101D17FE4010CEC06DE22742B3551267CE7770CD5FC2EE1AF734E8EF23F25A5C722B69FAA4E6E9D4FEF563AC0EA1E770EE299BCC3E50946C9EF091122FD826D57BCCE9BBFF5132C43C08215110DDC2D646B9C17A02808E7A1A1C0120E3C2', '001004974710CEA967EA5040DA4C1413D86B7CD054B19A1DF44D85E921F43B507E487DE5C1E186D0E08064B003AEE772EF20F6CB3E5C886A9AF0840A3AB42CD969CC80BBF7225ACC286053530FD3D2B325BBC06B7290886E18181F3BEFD3DE', '051B16FE471AD0D976F1425CDA4C1E61C26A77C35DC2EE01F95185EE25EC5E5E743865F3CAF186D6E88074AA0DB69265E53F9BCD23519579999C801E4ABB2AD765CD87BDFA302EC4340E52360CD9D2C429A8D873009B8C741B1802']
 exp_spaces =  [[4, 16, 28, 34, 42, 54, 60, 64, 86, 92], [6, 30, 36, 48, 64, 82, 90, 102, 108], [6, 20, 44, 50, 72, 92, 100, 114, 122, 132, 138, 148, 160], [14, 24, 30, 42, 52, 60, 66, 76, 82, 92, 114, 140, 146, 158, 168], [6, 24, 44, 52, 76, 82, 100, 120, 150]]
+# [4, 16, 28, 34, 42, 54, 60, 64, 86, 92]
+# [6, 30, 36, 48, 64, 82, 90, 102, 108]
+# [6, 20, 44, 50, 72, 92, 100, 114, 122, 132, 138, 148, 160]
+# [14, 24, 30, 42, 52, 60, 66, 76, 82, 92, 114, 140, 146, 158, 168]
+# [6, 24, 44, 52, 76, 82, 100, 120, 150]]
 test_case_6("6.3", ciphertexts, exp_spaces)
 
 
