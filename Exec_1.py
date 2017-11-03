@@ -21,7 +21,11 @@ BIT1 = BitType(1)
 # You can create your own functions in this area
 #
 #########################################################################################
-
+def create_input_myfare(input, index):
+    output = []
+    for i in range(index, index + 7, 2):
+        output.append(input[i])
+    return output
 # EXERCISE 1.1: Get LFSR's output sequence (use symbols o and l to define polinomial and initial_state vectors)
 
 # Function UOC_LFSR_Sequence.
@@ -114,43 +118,13 @@ def UOC_Myfare_NonLinearFilter(input):
     result = None
 
     #### IMPLEMENTATION GOES HERE ####
-    input_f=[]
-    input_f.append(input[9])
-    input_f.append(input[11])
-    input_f.append(input[13])
-    input_f.append(input[15])
-    outfA_1=UOC_Myfare_fA(input_f)
-    del input_f[:]
-    input_f.append(input[17])
-    input_f.append(input[19])
-    input_f.append(input[21])
-    input_f.append(input[23])
-    outfB_1 = UOC_Myfare_fB(input_f)
-    del input_f[:]
-    input_f.append(input[25])
-    input_f.append(input[27])
-    input_f.append(input[29])
-    input_f.append(input[31])
-    outfB_2 = UOC_Myfare_fB(input_f)
-    del input_f[:]
-    input_f.append(input[33])
-    input_f.append(input[35])
-    input_f.append(input[37])
-    input_f.append(input[39])
-    outfA_2 = UOC_Myfare_fA(input_f)
-    del input_f[:]
-    input_f.append(input[41])
-    input_f.append(input[43])
-    input_f.append(input[45])
-    input_f.append(input[47])
-    outfB_3 = UOC_Myfare_fB(input_f)
-    del input_f[:]
-    input_f.append(outfA_1)
-    input_f.append(outfB_1)
-    input_f.append(outfB_2)
-    input_f.append(outfA_2)
-    input_f.append(outfB_3)
-    result= UOC_Myfare_fC(input_f)
+    input_f = []
+    input_f.append(UOC_Myfare_fA(create_input_myfare(input, 9)))
+    input_f.append(UOC_Myfare_fB(create_input_myfare(input, 17)))
+    input_f.append(UOC_Myfare_fB(create_input_myfare(input, 25)))
+    input_f.append(UOC_Myfare_fA(create_input_myfare(input, 33)))
+    input_f.append(UOC_Myfare_fB(create_input_myfare(input, 41)))
+    result = UOC_Myfare_fC(input_f)
     ##################################
 
     return result
