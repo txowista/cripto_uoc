@@ -41,7 +41,7 @@ def UOC_LFSR_Sequence(polynomial, initial_state, output_bits):
                 xtemp ^= int(initial_state[x])
         for j in range(1, len(initial_state)):
             initial_state[j-1] = initial_state[j]
-        initial_state[len(initial_state)-1] = GFBitType(xtemp)
+        initial_state[len(initial_state)-1] = xtemp
     ##################################
     return result
 
@@ -53,7 +53,6 @@ def UOC_LFSR_Sequence(polynomial, initial_state, output_bits):
 # * Returns: BitType
 def UOC_Myfare_fA(input):
     result = None
-
     #### IMPLEMENTATION GOES HERE ####
     sub_1 = input[0] | input[1]
     sub_2 = input[0] & input[3]
@@ -115,9 +114,43 @@ def UOC_Myfare_NonLinearFilter(input):
     result = None
 
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    input_f=[]
+    input_f.append(input[9])
+    input_f.append(input[11])
+    input_f.append(input[13])
+    input_f.append(input[15])
+    outfA_1=UOC_Myfare_fA(input_f)
+    del input_f[:]
+    input_f.append(input[17])
+    input_f.append(input[19])
+    input_f.append(input[21])
+    input_f.append(input[23])
+    outfB_1 = UOC_Myfare_fB(input_f)
+    del input_f[:]
+    input_f.append(input[25])
+    input_f.append(input[27])
+    input_f.append(input[29])
+    input_f.append(input[31])
+    outfB_2 = UOC_Myfare_fB(input_f)
+    del input_f[:]
+    input_f.append(input[33])
+    input_f.append(input[35])
+    input_f.append(input[37])
+    input_f.append(input[39])
+    outfA_2 = UOC_Myfare_fA(input_f)
+    del input_f[:]
+    input_f.append(input[41])
+    input_f.append(input[43])
+    input_f.append(input[45])
+    input_f.append(input[47])
+    outfB_3 = UOC_Myfare_fB(input_f)
+    del input_f[:]
+    input_f.append(outfA_1)
+    input_f.append(outfB_1)
+    input_f.append(outfB_2)
+    input_f.append(outfA_2)
+    input_f.append(outfB_3)
+    result= UOC_Myfare_fC(input_f)
     ##################################
 
     return result
@@ -133,10 +166,14 @@ def UOC_Myfare_PseudoRandomGenerator(key, output_bits):
     output = []
 
     #### IMPLEMENTATION GOES HERE ####
-
-
+    # x 48 + x 43 + x 39 + x 38 + x 36 + x 34 + x 33 +
+    # x 31 + x 29 + x 24 + x 23 + x 21 + x 19 + x 13 + x 9 + x 7 + x 6 + x 5 + 1
+    polinomial = [l, o, o, o, o, l, o, o, o, l, l, o, l, o, l, l, o, l, o, l, o, o, o, o, l, l, o, l, o, l, o, o, o, o,
+                  o, l, o, o, o, l, o, l, l, l, o, o, o, o]
+    for i in range(0, output_bits):
+        output.append(UOC_Myfare_NonLinearFilter(key))
+        UOC_LFSR_Sequence(polinomial, key, 1)
     ##################################
-
     return output
 
 
@@ -320,6 +357,7 @@ def test_case_40(name, key, output_bits, exp_result):
 k4 = [0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 r4 = [0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0]
+
 test_case_40("4.1", k4, 30, r4)
 
 k4 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0,
