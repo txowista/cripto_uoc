@@ -6,6 +6,7 @@
 #
 #########################################################################################
 from sage.all import *
+import copy
 GFBitType = GF(2)
 o = GFBitType(0)
 l = GFBitType(1)
@@ -26,6 +27,19 @@ def create_input_myfare(input, index):
     for i in range(index, index + 7, 2):
         output.append(input[i])
     return output
+def tobits(s):
+    result = []
+    for c in s:
+        bits = bin(ord(c))[2:]
+        bits = '00000000'[len(bits):] + bits
+        result.extend([int(b) for b in bits])
+    return result
+def frombits(bits):
+    chars = []
+    for b in range(len(bits) / 8):
+        byte = bits[b*8:(b+1)*8]
+        chars.append(chr(int(''.join([str(bit) for bit in byte]), 2)))
+    return ''.join(chars)
 # EXERCISE 1.1: Get LFSR's output sequence (use symbols o and l to define polinomial and initial_state vectors)
 
 # Function UOC_LFSR_Sequence.
@@ -144,9 +158,10 @@ def UOC_Myfare_PseudoRandomGenerator(key, output_bits):
     # x 31 + x 29 + x 24 + x 23 + x 21 + x 19 + x 13 + x 9 + x 7 + x 6 + x 5 + 1
     polinomial = [l, o, o, o, o, l, o, o, o, l, l, o, l, o, l, l, o, l, o, l, o, o, o, o, l, l, o, l, o, l, o, o, o, o,
                   o, l, o, o, o, l, o, l, l, l, o, o, o, o]
+    my_key = copy.copy(key)
     for i in range(0, output_bits):
-        output.append(UOC_Myfare_NonLinearFilter(key))
-        UOC_LFSR_Sequence(polinomial, key, 1)
+        output.append(UOC_Myfare_NonLinearFilter(my_key))
+        UOC_LFSR_Sequence(polinomial, my_key, 1)
     ##################################
     return output
 
@@ -160,12 +175,19 @@ def UOC_Myfare_PseudoRandomGenerator(key, output_bits):
 # * Returns: Binary String (encipher mode), String (decipher mode)
 def UOC_Myfare_Cipher(key, mode, message):
     result = ""
-
-    #### IMPLEMENTATION GOES HERE ####
-
-
+    ### IMPLEMENTATION GOES HERE ####
+    if mode == 'e':
+        my_message = tobits(message)
+        one_time_pad = UOC_Myfare_PseudoRandomGenerator(key, len(my_message))
+        for i in range(0, len(my_message)):
+            result += str(my_message[i] ^ one_time_pad[i])
+    if mode == 'd':
+        my_message = list(message)
+        one_time_pad = UOC_Myfare_PseudoRandomGenerator(key, len(my_message))
+        for i in range(0, len(my_message)):
+            result += str(int(my_message[i]) ^ one_time_pad[i])
+        result = frombits(result)
     ##################################
-
     return result
 
 
