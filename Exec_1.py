@@ -234,9 +234,12 @@ def UOC_recover_key(ciphertexts):
     key = ""
 
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    key= "?"*max(len(l) for l in ciphertexts)
+    my_spaces = UOC_find_spaces_ciphertexts(ciphertexts)
+    for i in range(0, len(ciphertexts)):
+        for j in range(0, len(my_spaces[i])):
+            temp = int(ciphertexts[i][my_spaces[i][j]:my_spaces[i][j]+2], 16) ^ 0x20
+            key = key[:my_spaces[i][j]]+"%02X" % temp+key[my_spaces[i][j]+2:]
     ##################################
 
     return key
@@ -246,14 +249,18 @@ def UOC_recover_key(ciphertexts):
 # Function UOC_recover_message.
 # * Parameter ciphertexts: list of hexadecimal strings with the ciphertextx
 # * Returns: ASCII string with the plaintext corresponding to the last ciphertext in ciphertexts
-def UOC_recover_message(ciphertexts):
+def UOC_recover_message(ciphertexts,target_ciphertext):
     last_plaintext = ""
-
     #### IMPLEMENTATION GOES HERE ####
-
+    my_key = UOC_recover_key(ciphertexts)
+    for k in range(0, max(len(target_ciphertext), len(ciphertexts)), 2):
+        if my_key[k:k + 2] != "??":
+            temp = int(my_key[k:k + 2], 16) ^ int(target_ciphertext[k:k + 2], 16)
+        else:
+            temp = 63
+        last_plaintext += (chr(temp))
 
     ##################################
-
     return last_plaintext
 
 
@@ -277,8 +284,15 @@ ciphertexts = [
 
 target_ciphertext = "36445ABB21254A7DB645DAAE2BC199DFDB961BD00ED72388B3F771FF6B0405C28594F650C27D583809911886BEF31CD99821C5B959806E55442517CBF57268AE64238C1318F3DE5BB84BB6014FEC2C1C456D5843EFC2A0BF086B6C9F"
 
+plaintexts_exp="?E DISCOVERED?SERIOUS WEAKNESSES IN WPATWO?A PROTOCOL ?HAT?SECURE? ?LL ?ODER? P???EC?ED??IF?"
+
 #### IMPLEMENTATION GOES HERE ####
 
+def test_case_8(name, ciphertexts, target_ciphertext,exp):
+    ptxt = UOC_recover_message(ciphertexts,target_ciphertext)
+    print "Test", name + ":", exp == ptxt
+
+test_case_8("8.1",ciphertexts,target_ciphertext,plaintexts_exp)
 ##################################################################################
 # TEST CASES EXERCICE 1.1: LFSR
 ####################################################################################
@@ -523,12 +537,6 @@ test_case_6("6.2", ciphertexts, exp_spaces)
 
 ciphertexts = ['1310728D5014D3CD03F1484ABB417B7CC1036DCA54B18C07F85AEE8A2FFC3B531B3A6DE0CBE9F3CDE7EF79C509A8E772F234EBDA2358936A86989C', '101D17FE4010CBCC6FEA5743BF560F13C06519C159D48F059150ECED29EE5A5E1B2069E4C0F2E7CBEB807FA413C68163E528FFAE254BE16D849F88', '101D17FE4010CEC06DE22742B3551267CE7770CD5FC2EE1AF734E8EF23F25A5C722B69FAA4E6E9D4FEF563AC0EA1E770EE299BCC3E50946C9EF091122FD826D57BCCE9BBFF5132C43C08215110DDC2D646B9C17A02808E7A1A1C0120E3C2', '001004974710CEA967EA5040DA4C1413D86B7CD054B19A1DF44D85E921F43B507E487DE5C1E186D0E08064B003AEE772EF20F6CB3E5C886A9AF0840A3AB42CD969CC80BBF7225ACC286053530FD3D2B325BBC06B7290886E18181F3BEFD3DE', '051B16FE471AD0D976F1425CDA4C1E61C26A77C35DC2EE01F95185EE25EC5E5E743865F3CAF186D6E88074AA0DB69265E53F9BCD23519579999C801E4ABB2AD765CD87BDFA302EC4340E52360CD9D2C429A8D873009B8C741B1802']
 exp_spaces =  [[4, 16, 28, 34, 42, 54, 60, 64, 86, 92], [6, 30, 36, 48, 64, 82, 90, 102, 108], [6, 20, 44, 50, 72, 92, 100, 114, 122, 132, 138, 148, 160], [14, 24, 30, 42, 52, 60, 66, 76, 82, 92, 114, 140, 146, 158, 168], [6, 24, 44, 52, 76, 82, 100, 120, 150]]
-
-# [6, 20, 44, 50, 72, 92, 100, 114, 122, 132, 138, 148, 160]
-
-# [14, 24, 30, 42, 52, 60, 66, 76, 82, 92, 114, 140, 146, 158, 168]
-
-# [6, 24, 44, 52, 76, 82, 100, 120, 150]]
 
 
 test_case_6("6.3", ciphertexts, exp_spaces)
