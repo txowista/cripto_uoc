@@ -249,13 +249,14 @@ def UOC_recover_key(ciphertexts):
 # Function UOC_recover_message.
 # * Parameter ciphertexts: list of hexadecimal strings with the ciphertextx
 # * Returns: ASCII string with the plaintext corresponding to the last ciphertext in ciphertexts
-def UOC_recover_message(ciphertexts,target_ciphertext):
+def UOC_recover_message(ciphertexts):
     last_plaintext = ""
     #### IMPLEMENTATION GOES HERE ####
     my_key = UOC_recover_key(ciphertexts)
-    for k in range(0, max(len(target_ciphertext), len(ciphertexts)), 2):
+    last_ciphertext=ciphertexts[len(ciphertexts)-1]
+    for k in range(0, min(len(last_ciphertext), len(my_key)), 2):
         if my_key[k:k + 2] != "??":
-            temp = int(my_key[k:k + 2], 16) ^ int(target_ciphertext[k:k + 2], 16)
+            temp = int(my_key[k:k + 2], 16) ^ int(last_ciphertext[k:k + 2], 16)
         else:
             temp = 63
         last_plaintext += (chr(temp))
@@ -284,12 +285,13 @@ ciphertexts = [
 
 target_ciphertext = "36445ABB21254A7DB645DAAE2BC199DFDB961BD00ED72388B3F771FF6B0405C28594F650C27D583809911886BEF31CD99821C5B959806E55442517CBF57268AE64238C1318F3DE5BB84BB6014FEC2C1C456D5843EFC2A0BF086B6C9F"
 
-plaintexts_exp="?E DISCOVERED?SERIOUS WEAKNESSES IN WPATWO?A PROTOCOL ?HAT?SECURE? ?LL ?ODER? P???EC?ED??IF?"
+plaintexts_exp="?E DISCOVERED SERIOUS WEAKNESSES IN WPATWO A PROTOCOL ?HAT SECURE? ?LL ?ODER? P???EC?ED ?IF?"
 
 #### IMPLEMENTATION GOES HERE ####
 
 def test_case_8(name, ciphertexts, target_ciphertext,exp):
-    ptxt = UOC_recover_message(ciphertexts,target_ciphertext)
+    ciphertexts.append(target_ciphertext)
+    ptxt = UOC_recover_message(ciphertexts)
     print "Test", name + ":", exp == ptxt
 
 test_case_8("8.1",ciphertexts,target_ciphertext,plaintexts_exp)
