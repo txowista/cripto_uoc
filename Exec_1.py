@@ -275,14 +275,20 @@ def UOC_RSA_Verify(pubKey, message, signature):
 
 def UOC_BitcoinPayment(privKey, pubKey, addr_dest, hash_previous_transaction, tximport):
     new_transaction = transaction_struct()
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
+    if pubKey:
+        new_transaction.source_public_key_info.exponent = pubKey[0]
+        new_transaction.source_public_key_info.modulus = pubKey[1]
+        # new_transaction.address_source = UOC_MD5(concatenate_ints_as_strings([pubKey[0], pubKey[1]]))
+    if addr_dest:
+        new_transaction.address_destination = addr_dest
+    if tximport:
+        new_transaction.tximport = tximport
+    if privKey and hash_previous_transaction:
+        new_transaction.hash_previous_transaction = hash_previous_transaction
+        new_transaction.transaction_hash = UOC_MD5(new_transaction.get_hash_transaction())
+        new_transaction.signature = UOC_RSA_Sign(privKey,hexString_to_int(new_transaction.transaction_hash ))
     ##################################
-
     return new_transaction
 
 
@@ -293,12 +299,13 @@ def UOC_BitcoinPayment(privKey, pubKey, addr_dest, hash_previous_transaction, tx
 
 def UOC_GenTransactionValidation(transaction):
     result = -1
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
+    if transaction.tximport == BTC_IMPORT and transaction.address_source == -1 \
+            and transaction.transaction_hash == UOC_MD5(transaction.get_hash_transaction())\
+            and transaction.address_destination != -1 :
+        result = 1
+    else:
+        result = 0
     ##################################
 
     return result
@@ -312,12 +319,31 @@ def UOC_GenTransactionValidation(transaction):
 
 def UOC_TransactionValidation(block_chain, transaction):
     result = -1
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
+    result = 0
+    find_transactioon_hash = false
+    find_transactioon_destination= false
+    if UOC_GenTransactionValidation(transaction) and transaction.hash_previous_transaction != -1:
+        result = 1
+        for block in block_chain:
+            for transaction_element in block.transaction_list:
+                if transaction_element.hash_previous_transaction == transaction.hash_previous_transaction:
+                    result = 0
+        for block in block_chain:
+            if block.bitcoin_gen_transaction.transaction_hash == transaction.hash_previous_transaction:
+                find_transactioon_hash = true
+        if find_transactioon_hash == false:
+            result = 0
+        for block in block_chain:
+            if block.bitcoin_gen_transaction.address_destination == UOC_MD5(concatenate_ints_as_strings(
+                    [transaction.source_public_key_info.exponent, transaction.source_public_key_info.modulus])):
+                find_transactioon_destination = true
+        if find_transactioon_destination == false:
+            result = 0
+        if not UOC_RSA_Verify([transaction.source_public_key_info.exponent, transaction.source_public_key_info.modulus],
+                              hexString_to_int(transaction.transaction_hash),
+                          transaction.signature):
+            result = 0
     ##################################
 
     return result
