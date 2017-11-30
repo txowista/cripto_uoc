@@ -321,8 +321,8 @@ def UOC_TransactionValidation(block_chain, transaction):
     result = -1
     #### IMPLEMENTATION GOES HERE ####
     result = 0
-    find_transactioon_hash = false
-    find_transactioon_destination= false
+    find_transaction_hash = false
+    find_transaction_destination= false
     if UOC_GenTransactionValidation(transaction) and transaction.hash_previous_transaction != -1:
         result = 1
         for block in block_chain:
@@ -331,14 +331,14 @@ def UOC_TransactionValidation(block_chain, transaction):
                     result = 0
         for block in block_chain:
             if block.bitcoin_gen_transaction.transaction_hash == transaction.hash_previous_transaction:
-                find_transactioon_hash = true
-        if find_transactioon_hash == false:
+                find_transaction_hash = true
+        if find_transaction_hash == false:
             result = 0
         for block in block_chain:
             if block.bitcoin_gen_transaction.address_destination == UOC_MD5(concatenate_ints_as_strings(
                     [transaction.source_public_key_info.exponent, transaction.source_public_key_info.modulus])):
-                find_transactioon_destination = true
-        if find_transactioon_destination == false:
+                find_transaction_destination = true
+        if find_transaction_destination == false:
             result = 0
         if not UOC_RSA_Verify([transaction.source_public_key_info.exponent, transaction.source_public_key_info.modulus],
                               hexString_to_int(transaction.transaction_hash),
@@ -358,8 +358,21 @@ def UOC_BlockValidation(block_chain, block):
     result = -1
 
     #### IMPLEMENTATION GOES HERE ####
+    result = 1
+    if hexString_to_int(block.block_hash) > block.target:
+        result = 0
+    # block.previous_block_hash=block_chain[0].block_hash
+    # while  block.block_hash != UOC_MD5(block.get_hash_block()) :
+    #     print block.nonce
+    #     block.nonce += 1
+    if block.block_hash != UOC_MD5(block.get_hash_block()):
+        result = 0
+    if not UOC_GenTransactionValidation(block.bitcoin_gen_transaction):
+        result = 0
 
-
+    for transaction in block.transaction_list:
+        if not UOC_TransactionValidation(block_chain, transaction):
+            result = 0
 
 
     ##################################
@@ -374,11 +387,21 @@ def UOC_BlockValidation(block_chain, block):
 
 def UOC_BlockChainValidation(block_chain):
     result = -1
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
+    result = 1
+    find_previous_hash = false
+    for block_chain_inside in block_chain:
+        if not UOC_BlockValidation(block_chain,block_chain_inside):
+            result = 0
+    if len(block_chain) > 1:
+        for i in range(0,len(block_chain)):
+            for j in range(i + 1, len(block_chain)):
+                if block_chain[i].previous_block_hash != UOC_MD5(block_chain[j].get_hash_block()):
+                    find_previous_hash = true
+        if find_previous_hash:
+            result = 0
+    if result == 1:
+        result = UOC_MD5(block_chain[-1].get_hash_block())
 
     ##################################
 
@@ -395,12 +418,17 @@ def UOC_BlockChainValidation(block_chain):
 
 def UOC_CreateNewBlock(previous_block_hash, block_transactions, tximport, address):
     new_block = block_struct()
-
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
+    new_block.previous_block_hash = previous_block_hash
+    new_block.target = 0
+    new_block.transaction_list = block_transactions
+    new_block.nonce = 0
+    bitcoin_transaction = transaction_struct()
+    bitcoin_transaction.address_destination = address
+    bitcoin_transaction.tximport = tximport
+    bitcoin_transaction.transaction_hash = UOC_MD5(bitcoin_transaction.get_hash_transaction())
+    new_block.bitcoin_gen_transaction = bitcoin_transaction
+    new_block.block_hash = UOC_MD5(new_block.get_hash_block())
     ##################################
 
     return new_block
@@ -418,10 +446,10 @@ def UOC_CreateNewBlock(previous_block_hash, block_transactions, tximport, addres
 
 def UOC_AddBlock2Blockchain(block_chain, block, target):
     #### IMPLEMENTATION GOES HERE ####
-
-
-
-
+    if UOC_BlockChainValidation(block_chain):
+        block.target = target
+        if UOC_BlockValidation(block_chain,block):
+            block_chain.extend(block)
     ##################################
 
     return block_chain
@@ -628,7 +656,7 @@ BLOCK = block_struct()
 BLOCK.bitcoin_gen_transaction = TX0
 BLOCK.target = MAX_TARGET
 BLOCK.transaction_list = [TX1]
-BLOCK.block_hash = "b16e0ce9fcb7621ea74b42c73d54e10c"
+BLOCK.block_hash = "70983035aa938d103fff2bec6c2bcbae"
 
 # Ok block
 test_case_22("22.1", TEST_BLOCK_CHAIN, BLOCK, 1)
