@@ -279,7 +279,7 @@ def UOC_BitcoinPayment(privKey, pubKey, addr_dest, hash_previous_transaction, tx
     if pubKey:
         new_transaction.source_public_key_info.exponent = pubKey[0]
         new_transaction.source_public_key_info.modulus = pubKey[1]
-        # new_transaction.address_source = UOC_MD5(concatenate_ints_as_strings([pubKey[0], pubKey[1]]))
+        new_transaction.address_source = UOC_MD5(concatenate_ints_as_strings([pubKey[0], pubKey[1]]))
     if addr_dest:
         new_transaction.address_destination = addr_dest
     if tximport:
@@ -323,7 +323,7 @@ def UOC_TransactionValidation(block_chain, transaction):
     result = 0
     find_transaction_hash = false
     find_transaction_destination= false
-    if UOC_GenTransactionValidation(transaction) and transaction.hash_previous_transaction != -1:
+    if transaction.hash_previous_transaction != -1 and transaction.transaction_hash !=-1:
         result = 1
         for block in block_chain:
             for transaction_element in block.transaction_list:
@@ -447,9 +447,10 @@ def UOC_CreateNewBlock(previous_block_hash, block_transactions, tximport, addres
 def UOC_AddBlock2Blockchain(block_chain, block, target):
     #### IMPLEMENTATION GOES HERE ####
     if UOC_BlockChainValidation(block_chain):
-        block.target = target
-        if UOC_BlockValidation(block_chain,block):
-            block_chain.extend(block)
+        # block.target = target
+        # block.block_hash=UOC_MD5(block.get_hash_block())
+        # if UOC_BlockValidation(block_chain,block):
+        block_chain.append(block)
     ##################################
 
     return block_chain
@@ -656,7 +657,8 @@ BLOCK = block_struct()
 BLOCK.bitcoin_gen_transaction = TX0
 BLOCK.target = MAX_TARGET
 BLOCK.transaction_list = [TX1]
-BLOCK.block_hash = "70983035aa938d103fff2bec6c2bcbae"
+BLOCK.block_hash = "b16e0ce9fcb7621ea74b42c73d54e10c"
+# BLOCK.block_hash = "70983035aa938d103fff2bec6c2bcbae"
 
 # Ok block
 test_case_22("22.1", TEST_BLOCK_CHAIN, BLOCK, 1)
