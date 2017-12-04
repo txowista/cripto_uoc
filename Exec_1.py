@@ -1,4 +1,5 @@
 from sage.all import *
+from fractions import Fraction
 ####################################################################
 # CONSTANT DEFINITIONS #############################################
 ####################################################################
@@ -323,7 +324,7 @@ def UOC_TransactionValidation(block_chain, transaction):
     result = 0
     find_transaction_hash = false
     find_transaction_destination= false
-    if transaction.hash_previous_transaction != -1 and transaction.transaction_hash !=-1:
+    if transaction.hash_previous_transaction != -1 and transaction.transaction_hash != -1 and transaction.tximport == BTC_IMPORT:
         result = 1
         for block in block_chain:
             for transaction_element in block.transaction_list:
@@ -342,7 +343,7 @@ def UOC_TransactionValidation(block_chain, transaction):
             result = 0
         if not UOC_RSA_Verify([transaction.source_public_key_info.exponent, transaction.source_public_key_info.modulus],
                               hexString_to_int(transaction.transaction_hash),
-                          transaction.signature):
+                              transaction.signature):
             result = 0
     ##################################
 
@@ -361,22 +362,24 @@ def UOC_BlockValidation(block_chain, block):
     result = 1
     if hexString_to_int(block.block_hash) > block.target:
         result = 0
-    # block.previous_block_hash=block_chain[0].block_hash
-    # while  block.block_hash != UOC_MD5(block.get_hash_block()) :
-    #     print block.nonce
-    #     block.nonce += 1
     if block.block_hash != UOC_MD5(block.get_hash_block()):
         result = 0
     if not UOC_GenTransactionValidation(block.bitcoin_gen_transaction):
         result = 0
-
     for transaction in block.transaction_list:
         if not UOC_TransactionValidation(block_chain, transaction):
             result = 0
+    find_previous_hash = false
+    if len(block.transaction_list) > 1:
+        for i in range(0, len(block.transaction_list)):
+            for j in range(i + 1, len(block.transaction_list)):
+                if block.transaction_list[i].hash_previous_transaction == block.transaction_list[j].hash_previous_transaction:
+                    find_previous_hash = true
+    if find_previous_hash:
+        result = 0
 
 
     ##################################
-
     return result
 
 
@@ -396,7 +399,7 @@ def UOC_BlockChainValidation(block_chain):
     if len(block_chain) > 1:
         for i in range(0,len(block_chain)):
             for j in range(i + 1, len(block_chain)):
-                if block_chain[i].previous_block_hash != UOC_MD5(block_chain[j].get_hash_block()):
+                if block_chain[j].previous_block_hash != block_chain[i].block_hash:
                     find_previous_hash = true
         if find_previous_hash:
             result = 0
@@ -426,8 +429,10 @@ def UOC_CreateNewBlock(previous_block_hash, block_transactions, tximport, addres
     bitcoin_transaction = transaction_struct()
     bitcoin_transaction.address_destination = address
     bitcoin_transaction.tximport = tximport
+    bitcoin_transaction.address_source = -1
     bitcoin_transaction.transaction_hash = UOC_MD5(bitcoin_transaction.get_hash_transaction())
-    new_block.bitcoin_gen_transaction = bitcoin_transaction
+    if UOC_GenTransactionValidation(bitcoin_transaction):
+        new_block.bitcoin_gen_transaction = bitcoin_transaction
     new_block.block_hash = UOC_MD5(new_block.get_hash_block())
     ##################################
 
@@ -447,10 +452,13 @@ def UOC_CreateNewBlock(previous_block_hash, block_transactions, tximport, addres
 def UOC_AddBlock2Blockchain(block_chain, block, target):
     #### IMPLEMENTATION GOES HERE ####
     if UOC_BlockChainValidation(block_chain):
-        # block.target = target
-        # block.block_hash=UOC_MD5(block.get_hash_block())
-        # if UOC_BlockValidation(block_chain,block):
-        block_chain.append(block)
+        block.target = target
+        block.block_hash = UOC_MD5(block.get_hash_block())
+        while block.target < hexString_to_int(block.block_hash):
+            block.nonce = UOC_Random_int()
+            block.block_hash = UOC_MD5(block.get_hash_block())
+        if UOC_BlockValidation(block_chain,block):
+            block_chain.append(block)
     ##################################
 
     return block_chain
@@ -714,8 +722,8 @@ previous_block_hash = UOC_BlockChainValidation(TEST_BLOC_CHAIN)
 block_transactions = []
 gen_transac_address = "7439dbcb4b1c7b28b1f8fd3d612e61cf"
 BK = UOC_CreateNewBlock(previous_block_hash, block_transactions, BTC_IMPORT, gen_transac_address)
-
-target = MAX_TARGET/100
+target = Fraction(MAX_TARGET,100)
+# target = MAX_TARGET/100
 TEST_BLOC_CHAIN = UOC_AddBlock2Blockchain(TEST_BLOC_CHAIN, BK, target)
 
 print "Test 30.1:", len(TEST_BLOC_CHAIN) == 2 and TEST_BLOC_CHAIN[0].block_hash == "b482f2b7458c897489cb847936f4ef34" and TEST_BLOC_CHAIN[1].block_hash == "0013b218d8530cee08154388cb562a99"
@@ -736,7 +744,8 @@ if UOC_TransactionValidation(TEST_BLOC_CHAIN, TX1) == 1:
     previous_block_hash = UOC_BlockChainValidation(TEST_BLOC_CHAIN)
     block_transactions = [TX1]
     gen_transac_address = "1aab81459a0807383d6ae0829fdb440a"
-    target = MAX_TARGET/70
+    # target = MAX_TARGET/70
+    target = Fraction(MAX_TARGET, 70)
     BK = UOC_CreateNewBlock(previous_block_hash, block_transactions, BTC_IMPORT, gen_transac_address)
     TEST_BLOC_CHAIN = UOC_AddBlock2Blockchain(TEST_BLOC_CHAIN, BK, target)
 
@@ -752,7 +761,6 @@ if len(TEST_BLOC_CHAIN) == 3 and TEST_BLOC_CHAIN[2].block_hash == "00f892ead0d10
     print "Test 30.3:", result == 0
 else:
     print "Test 30.3: false"
-
 # Test 30.4 (depends on Test 30.3)
 if len(TEST_BLOC_CHAIN) == 3 and TEST_BLOC_CHAIN[2].block_hash == "89b94944d2275acbdde51190b1a6a256":
     BK = TEST_BLOC_CHAIN[len(TEST_BLOC_CHAIN) - 1]
